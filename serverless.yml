@@ -1,0 +1,40 @@
+service: nestjs-serverless-test
+
+plugins:
+  - serverless-layers
+  - serverless-offline
+
+custom:
+  defaultStage: dev
+  profiles:
+    dev: yuki.nakata
+    prod: prod
+  serverless-layers:
+    layersDeploymentBucket: in-house-library-api-serverless-bucket
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ap-northeast-1
+  stage: ${opt:stage, 'dev'}
+  profile: ${self:custom.profiles.${self:provider.stage}}
+  environment:
+    SERVERLESS_STAGE: ${self:provider.stage}
+
+package:
+  individually: true
+  include:
+    - dist/**
+  exclude:
+    - '**'
+
+functions:
+  index:
+    handler: dist/handler.handler
+    events:
+      - http:
+          path: '/'
+          method: any
+      - http:
+          path: '{proxy+}'
+          method: any
