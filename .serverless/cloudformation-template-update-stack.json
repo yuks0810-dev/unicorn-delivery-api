@@ -161,7 +161,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/nestjs-serverless-test/dev/1648135847355-2022-03-24T15:30:47.355Z/index.zip"
+          "S3Key": "serverless/nestjs-serverless-test/dev/1648136248746-2022-03-24T15:37:28.746Z/index.zip"
         },
         "Handler": "dist/handler.handler",
         "Runtime": "nodejs12.x",
@@ -187,14 +187,14 @@
         "IndexLogGroup"
       ]
     },
-    "IndexLambdaVersionLRQzqg0lCHXVeuFiWCnOo5k5ybPHvwKsk2TCpN3TPE": {
+    "IndexLambdaVersionH7ZgwEyqCq0bByKneQaL225EcAT1108eBk7mTyOw": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "IndexLambdaFunction"
         },
-        "CodeSha256": "lew6hmj//R19tKwhebNJBOucfu72a8wMNerD0VrbvAk="
+        "CodeSha256": "G4KHZ7jsLjsgUksa8v1+4RzuiRG+hEDnTPJYJwrOHrk="
       }
     },
     "ApiGatewayRestApi": {
@@ -319,7 +319,7 @@
         "IndexLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1648135843791": {
+    "ApiGatewayDeployment1648136246668": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -382,7 +382,7 @@
     "IndexLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "IndexLambdaVersionLRQzqg0lCHXVeuFiWCnOo5k5ybPHvwKsk2TCpN3TPE"
+        "Ref": "IndexLambdaVersionH7ZgwEyqCq0bByKneQaL225EcAT1108eBk7mTyOw"
       },
       "Export": {
         "Name": "sls-nestjs-serverless-test-dev-IndexLambdaFunctionQualifiedArn"
