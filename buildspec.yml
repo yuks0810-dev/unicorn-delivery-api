@@ -17,6 +17,8 @@ phases:
     on-failure: ABORT
     commands:
       - echo "branch name" $BRANCH_NAME
+      - echo $CODEBUILD_SOURCE_VERSION #ディレクトリ有りブランチ名
+      - echo $CODEBUILD_SOURCE_VERSION | sed -e 's!refs/heads/!!' #ディレクトリ無しブランチ名
       - echo Nothing to do in the pre_build phase...
       - echo $TEST_KEY
   build:
