@@ -18,8 +18,7 @@ phases:
     commands:
       - echo Nothing to do in the pre_build phase...
       - echo "-------------------"
-      - echo $CODEBUILD_WEBHOOK_TRIGGER
-      - echo "$CODEBUILD_WEBHOOK_TRIGGER"
+      - echo ${CODEBUILD_WEBHOOK_TRIGGER#branch/}
       - echo $TEST_KEY
   build:
     on-failure: ABORT
