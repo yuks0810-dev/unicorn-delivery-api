@@ -18,7 +18,7 @@ phases:
     commands:
       - echo Nothing to do in the pre_build phase...
       - echo $AWS_REGION
-      - echo $CODEBUILD_WEBHOOK_TRIGGER
+      - echo $CODEBUILD_WEBHOOK_BASE_REF
       - echo $TEST_KEY
   build:
     on-failure: ABORT
