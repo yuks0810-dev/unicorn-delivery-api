@@ -10,7 +10,7 @@ phases:
       nodejs: 12
     commands:
       # ソースコードのclone実行
-      - git clone $CODEBUILD_SOURCE_REPO_URL
+      - git clone https://github.com/yuks0810-dev/in-house-library-api.git
       - cd in-house-library-api
       - npm install
   pre_build:
