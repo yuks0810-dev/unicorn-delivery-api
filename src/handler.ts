@@ -10,7 +10,7 @@ let cachedServer: Server;
 
 async function bootstrapServer(): Promise<Server> {
   const expressApp = express();
-  const adapter = new ExpressAdapter(expressApp);  
+  const adapter = new ExpressAdapter(expressApp);
   const nestApp = await NestFactory.create(AppModule, adapter);
   await nestApp.init();
   return createServer(expressApp);

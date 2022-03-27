@@ -1,0 +1,50 @@
+version: "3.8"
+services:
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/backend/Dockerfile
+  #     target: ${TARGET}
+  #     args:
+  #       - uid=${HOST_UID}
+  #       - gid=${HOST_GID}
+  #   container_name: leadreal_backend_nestjs
+  #   ports:
+  #     - ${BACKEND_PORT}:5000
+  #   volumes:
+  #     - ./backend:/var/www/leadreal_backend
+  #   tty: true
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: ./containers/frontend/Dockerfile
+  #     target: ${TARGET}
+  #     args:
+  #       - uid=${HOST_UID}
+  #       - gid=${HOST_GID}
+  #   container_name: leadreal_frontend_nextjs
+  #   ports:
+  #     - ${FRONTEND_PORT}:3000
+  #   volumes:
+  #     - ./frontend:/var/www/leadreal_frontend
+  #   tty: true
+  # nginx:
+  #   build: ./containers/nginx
+  #   container_name: leadreal_nginx
+  #   ports:
+  #     - ${NGINX_HOST_HTTP_PORT}:80
+  #   volumes:
+  #     - ./containers/nginx/default.conf:/etc/nginx/conf.d/default.conf
+  mysql:
+    build: ./docker/mysql
+    container_name: mysql
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      # - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - TZ=${MYSQL_TZ}
+    ports:
+      - ${MYSQL_PORT}:3306
+    volumes:
+      - ./docker/db/data:/var/lib/mysql
