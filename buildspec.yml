@@ -10,15 +10,15 @@ phases:
       nodejs: 12
     commands:
       # ソースコードのclone実行
-      - git clone https://github.com/yuks0810-dev/in-house-library-api.git
+      - git clone $CODEBUILD_SOURCE_REPO_URL
       - cd in-house-library-api
       - npm install
   pre_build:
     on-failure: ABORT
     commands:
       - echo Nothing to do in the pre_build phase...
-      - echo "-------------------"
       - echo $AWS_REGION
+      - echo $CODEBUILD_WEBHOOK_TRIGGER
       - echo $TEST_KEY
   build:
     on-failure: ABORT
