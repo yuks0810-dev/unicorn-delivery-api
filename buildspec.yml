@@ -3,7 +3,7 @@ version: 0.2
 env:
   secrets-manager:
     # key: secret-id:json-key:version-stage:version-id
-    TEST_KEY: "arn:aws:secretsmanager:ap-northeast-1:184571202268:secret:in-house-library-secret-keys-nu03oS:TEST_KEY"
+    TEST_KEY: "in-house-library-secret-keys:TEST_KEY"
 
 phases:
   install:
