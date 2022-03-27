@@ -5,6 +5,12 @@
     "username": "root",
     "password": "root_pass",
     "database": "in-house-library-db",
-    "entities": [],
-    "synchronize": true
+    "migrations": ["src/migrations/*{.ts,.js}"],
+    "entities": ["src/entities/*{.ts,.js}"],
+    "synchronize": false,
+    "logging": false,
+    "cli": {
+        "entitiesDir": "src/entity",
+        "migrationsDir": "src/migrations"
+    }
 }
