@@ -1,25 +1,42 @@
-service: nestjs-serverless-test
+org: nakatayuki
+app: nestjs-serverless-test
+service: NestJsServerless
 
 plugins:
   - serverless-layers
   - serverless-offline
-
-custom:
-  defaultStage: dev
-  profiles:
-    dev: yuki.nakata
-    prod: prod
-  serverless-layers:
-    layersDeploymentBucket: in-house-library-api-serverless-bucket
-
+    
 provider:
   name: aws
   runtime: nodejs12.x
   region: ap-northeast-1
-  stage: ${opt:stage, 'dev'}
-  profile: ${self:custom.profiles.${self:provider.stage}}
+  stage: ${opt:stage, self:custom.defaultStage}
+  profile: yuki.nakata
+  timeout: 30
+  memorySize: 128
+  versionFunctions: false
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+        - rds-data:*
+        - ec2:CreateNetworkInterface
+        - ec2:DescribeNetworkInterfaces
+        - ec2:DeleteNetworkInterface
+      Resource: "*"
   environment:
-    SERVERLESS_STAGE: ${self:provider.stage}
+    TZ: Asia/Tokyo
+
+custom:
+  defaultStage: dev
+  serverless-layers:
+    layersDeploymentBucket: in-house-library-api-serverless-bucket
+  profiles:
+    dev: yuki.nakata
+    stg: yuki.nakata
+    prd: yuki.nakata
+  # environments: ${file(./config/config.${opt:stage, self:custom.defaultStage}.yml)}
+  # secret: ${file(./config/secret/.secret.${opt:stage, self:custom.defaultStage}.yml)}
 
 package:
   individually: true
@@ -29,8 +46,14 @@ package:
     - '**'
 
 functions:
-  index:
+  LmandaFunc:
+    name: in-house-library-api-${self:provider.stage}
     handler: dist/handler.handler
+    vpc:
+      securityGroupIds:
+        - !Ref InHouseLibrarySecurityGroup
+      subnetIds:
+        - !Ref InHouseLibraryPrivateSubnet
     events:
       - http:
           path: '/'
@@ -38,3 +61,126 @@ functions:
       - http:
           path: '{proxy+}'
           method: any
+
+resources:
+  Resources:
+
+    InHouseLibraryVPC:
+      Type: AWS::EC2::VPC
+      DeletionPolicy: Delete
+      Properties:
+        CidrBlock: 10.1.0.0/16
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryVPC
+
+    InHouseLibraryInternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryInternetGateway
+
+    VPCGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        InternetGatewayId: !Ref InHouseLibraryInternetGateway
+    
+    InHouseLibraryElasticIp:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+        # Tags:
+        #   - Key: Name
+        #     Value: InHouseLibraryElasticIp
+    
+    InHouseLibraryNatGateway:
+      DependsOn: InHouseLibraryElasticIp
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId: !GetAtt InHouseLibraryElasticIp.AllocationId
+        SubnetId: !Ref InHouseLibraryPublicSubnet
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryNatGateway
+    
+    InHouseLibraryPrivateSubnet:
+      DependsOn: InHouseLibraryVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        # AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.1.1.0/24
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryPrivateSubnet
+
+    InHouseLibraryPrivateRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryPrivateRouteTable
+
+    InHouseLibraryPrivateRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId: !Ref InHouseLibraryPrivateRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId: !Ref InHouseLibraryNatGateway
+
+    SubnetRouteTableAssociationPrivateSubnet:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId: !Ref InHouseLibraryPrivateSubnet
+        RouteTableId: !Ref InHouseLibraryPrivateRouteTable
+
+    InHouseLibraryPublicSubnet:
+      DependsOn: InHouseLibraryVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        # AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.1.11.0/24
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryPublicSubnet
+
+    InHouseLibraryPublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryPublicRouteTable
+
+    InHouseLibraryPublicRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId: !Ref InHouseLibraryPublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref InHouseLibraryInternetGateway
+
+    SubnetRouteTableAssociationPublicSubnet:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId: !Ref InHouseLibraryPublicSubnet
+        RouteTableId: !Ref InHouseLibraryPublicRouteTable
+
+    InHouseLibraryApiGatewayRestApi:
+      Type: AWS::ApiGateway::RestApi
+      DeletionPolicy: Delete
+      Properties:
+        EndpointConfiguration:
+          Types:
+            - REGIONAL
+        Name: ${self:service}-${self:provider.stage}
+
+    InHouseLibrarySecurityGroup:
+      DependsOn: InHouseLibraryVPC
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: SecurityGroup for InHouseLibrary Functions
+        VpcId: !Ref InHouseLibraryVPC
