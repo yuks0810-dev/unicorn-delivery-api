@@ -9,7 +9,7 @@ phases:
     runtime-versions:
       nodejs: 14
     commands:
-      # ソースコードのclone
+      # ソースコードのclone実行
       - git clone https://github.com/yuks0810-dev/in-house-library-api.git
       - cd in-house-library-api
       - npm install
