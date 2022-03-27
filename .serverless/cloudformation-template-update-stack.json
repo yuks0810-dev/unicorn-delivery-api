@@ -71,10 +71,10 @@
         }
       }
     },
-    "IndexLogGroup": {
+    "LmandaFuncLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/nestjs-serverless-test-dev-index"
+        "LogGroupName": "/aws/lambda/in-house-library-api-stg"
       }
     },
     "IamRoleLambdaExecution": {
@@ -102,8 +102,8 @@
               "Fn::Join": [
                 "-",
                 [
-                  "nestjs-serverless-test",
-                  "dev",
+                  "NestJsServerless",
+                  "stg",
                   "lambda"
                 ]
               ]
@@ -119,7 +119,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/nestjs-serverless-test-dev*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/in-house-library-api-stg:*"
                     }
                   ]
                 },
@@ -130,9 +130,20 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/nestjs-serverless-test-dev*:*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/in-house-library-api-stg:*:*"
                     }
                   ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue",
+                    "rds-data:*",
+                    "ec2:CreateNetworkInterface",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DeleteNetworkInterface"
+                  ],
+                  "Resource": "*"
                 }
               ]
             }
@@ -143,34 +154,94 @@
           "Fn::Join": [
             "-",
             [
-              "nestjs-serverless-test",
-              "dev",
+              "NestJsServerless",
+              "stg",
               {
                 "Ref": "AWS::Region"
               },
               "lambdaRole"
             ]
           ]
-        }
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+              ]
+            ]
+          }
+        ]
       }
     },
-    "IndexLambdaFunction": {
+    "EnterpriseLogAccessIamRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::802587217904:root"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "sts:ExternalId": "ServerlessEnterprise-9cddf24e-1c91-461b-8456-e8cf7b336784"
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "LogFilterAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:FilterLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "LmandaFuncLogGroup",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "LmandaFuncLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/nestjs-serverless-test/dev/1648136248746-2022-03-24T15:37:28.746Z/index.zip"
+          "S3Key": "serverless/NestJsServerless/stg/1648307476609-2022-03-26T15:11:16.609Z/LmandaFunc.zip"
         },
-        "Handler": "dist/handler.handler",
+        "Handler": "s_LmandaFunc.handler",
         "Runtime": "nodejs12.x",
-        "FunctionName": "nestjs-serverless-test-dev-index",
-        "MemorySize": 1024,
-        "Timeout": 6,
+        "FunctionName": "in-house-library-api-stg",
+        "MemorySize": 128,
+        "Timeout": 30,
         "Environment": {
           "Variables": {
-            "SERVERLESS_STAGE": "dev"
+            "TZ": "Asia/Tokyo"
           }
         },
         "Role": {
@@ -179,28 +250,30 @@
             "Arn"
           ]
         },
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Ref": "InHouseLibrarySecurityGroup"
+            }
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "InHouseLibraryPrivateSubnet"
+            }
+          ]
+        },
         "Layers": [
-          "arn:aws:lambda:ap-northeast-1:184571202268:layer:nestjs-serverless-test-dev-nodejs-default:2"
+          "arn:aws:lambda:ap-northeast-1:184571202268:layer:nestjsserverless-stg-nodejs-default:2"
         ]
       },
       "DependsOn": [
-        "IndexLogGroup"
+        "LmandaFuncLogGroup"
       ]
-    },
-    "IndexLambdaVersionH7ZgwEyqCq0bByKneQaL225EcAT1108eBk7mTyOw": {
-      "Type": "AWS::Lambda::Version",
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "FunctionName": {
-          "Ref": "IndexLambdaFunction"
-        },
-        "CodeSha256": "G4KHZ7jsLjsgUksa8v1+4RzuiRG+hEDnTPJYJwrOHrk="
-      }
     },
     "ApiGatewayRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Name": "dev-nestjs-serverless-test",
+        "Name": "stg-NestJsServerless",
         "EndpointConfiguration": {
           "Types": [
             "EDGE"
@@ -258,7 +331,7 @@
                 ":lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
-                    "IndexLambdaFunction",
+                    "LmandaFuncLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -270,7 +343,7 @@
         "MethodResponses": []
       },
       "DependsOn": [
-        "IndexLambdaPermissionApiGateway"
+        "LmandaFuncLambdaPermissionApiGateway"
       ]
     },
     "ApiGatewayMethodProxyVarAny": {
@@ -304,7 +377,7 @@
                 ":lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
-                    "IndexLambdaFunction",
+                    "LmandaFuncLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -316,28 +389,28 @@
         "MethodResponses": []
       },
       "DependsOn": [
-        "IndexLambdaPermissionApiGateway"
+        "LmandaFuncLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1648136246668": {
+    "ApiGatewayDeployment1648307437421": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         },
-        "StageName": "dev"
+        "StageName": "stg"
       },
       "DependsOn": [
         "ApiGatewayMethodAny",
         "ApiGatewayMethodProxyVarAny"
       ]
     },
-    "IndexLambdaPermissionApiGateway": {
+    "LmandaFuncLambdaPermissionApiGateway": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
-            "IndexLambdaFunction",
+            "LmandaFuncLambdaFunction",
             "Arn"
           ]
         },
@@ -368,6 +441,351 @@
           ]
         }
       }
+    },
+    "ApiGatewayLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/api-gateway/NestJsServerless-stg"
+      }
+    },
+    "CustomApiGatewayAccountCloudWatchRole": {
+      "Type": "Custom::ApiGatewayAccountRole",
+      "Version": 1,
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomDashresourceDashapigwDashcwDashroleLambdaFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "IamRoleCustomResourcesLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "stg",
+                  "NestJsServerless",
+                  "custom-resources-lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      ":",
+                      [
+                        "arn",
+                        {
+                          "Ref": "AWS::Partition"
+                        },
+                        "iam:",
+                        {
+                          "Ref": "AWS::AccountId"
+                        },
+                        "role/*"
+                      ]
+                    ]
+                  },
+                  "Action": [
+                    "iam:AttachRolePolicy",
+                    "iam:CreateRole",
+                    "iam:ListAttachedRolePolicies",
+                    "iam:PassRole"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      ":",
+                      [
+                        "arn",
+                        {
+                          "Ref": "AWS::Partition"
+                        },
+                        "apigateway:*::/account"
+                      ]
+                    ]
+                  },
+                  "Action": [
+                    "apigateway:GET",
+                    "apigateway:PATCH"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CustomDashresourceDashapigwDashcwDashroleLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/NestJsServerless/stg/1648307476609-2022-03-26T15:11:16.609Z/custom-resources.zip"
+        },
+        "FunctionName": "NestJsServerless-stg-custom-resource-apigw-cw-role",
+        "Handler": "api-gateway-cloud-watch-role/handler.handler",
+        "MemorySize": 1024,
+        "Runtime": "nodejs14.x",
+        "Timeout": 180,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleCustomResourcesLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "IamRoleCustomResourcesLambdaExecution"
+      ]
+    },
+    "InHouseLibraryVPC": {
+      "Type": "AWS::EC2::VPC",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "CidrBlock": "10.1.0.0/16",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "InHouseLibraryVPC"
+          }
+        ]
+      }
+    },
+    "InHouseLibraryInternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "InHouseLibraryInternetGateway"
+          }
+        ]
+      }
+    },
+    "VPCGatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "InHouseLibraryVPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InHouseLibraryInternetGateway"
+        }
+      }
+    },
+    "InHouseLibraryElasticIp": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "InHouseLibraryNatGateway": {
+      "DependsOn": [
+        "InHouseLibraryElasticIp"
+      ],
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "InHouseLibraryElasticIp",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "InHouseLibraryPublicSubnet"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "InHouseLibraryNatGateway"
+          }
+        ]
+      }
+    },
+    "InHouseLibraryPrivateSubnet": {
+      "DependsOn": [
+        "InHouseLibraryVPC"
+      ],
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "InHouseLibraryVPC"
+        },
+        "CidrBlock": "10.1.1.0/24",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "InHouseLibraryPrivateSubnet"
+          }
+        ]
+      }
+    },
+    "InHouseLibraryPrivateRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "InHouseLibraryVPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "InHouseLibraryPrivateRouteTable"
+          }
+        ]
+      }
+    },
+    "InHouseLibraryPrivateRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "InHouseLibraryPrivateRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "InHouseLibraryNatGateway"
+        }
+      }
+    },
+    "SubnetRouteTableAssociationPrivateSubnet": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "InHouseLibraryPrivateSubnet"
+        },
+        "RouteTableId": {
+          "Ref": "InHouseLibraryPrivateRouteTable"
+        }
+      }
+    },
+    "InHouseLibraryPublicSubnet": {
+      "DependsOn": [
+        "InHouseLibraryVPC"
+      ],
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "InHouseLibraryVPC"
+        },
+        "CidrBlock": "10.1.11.0/24",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "InHouseLibraryPublicSubnet"
+          }
+        ]
+      }
+    },
+    "InHouseLibraryPublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "InHouseLibraryVPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "InHouseLibraryPublicRouteTable"
+          }
+        ]
+      }
+    },
+    "InHouseLibraryPublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "InHouseLibraryPublicRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InHouseLibraryInternetGateway"
+        }
+      }
+    },
+    "SubnetRouteTableAssociationPublicSubnet": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "InHouseLibraryPublicSubnet"
+        },
+        "RouteTableId": {
+          "Ref": "InHouseLibraryPublicRouteTable"
+        }
+      }
+    },
+    "InHouseLibraryApiGatewayRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL"
+          ]
+        },
+        "Name": "NestJsServerless-stg"
+      }
+    },
+    "InHouseLibrarySecurityGroup": {
+      "DependsOn": [
+        "InHouseLibraryVPC"
+      ],
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "SecurityGroup for InHouseLibrary Functions",
+        "VpcId": {
+          "Ref": "InHouseLibraryVPC"
+        }
+      }
+    },
+    "CWLSubFilterLmandaFuncLogGroupApNortheast1": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": "arn:aws:logs:ap-northeast-1:802587217904:destination:9cddf24e-1c91-461b-8456-e8cf7b336784#7xdKqZlzmmNpM2QY7S#NestJsServerless#stg",
+        "FilterPattern": "?\"REPORT RequestId: \" ?\"SERVERLESS_ENTERPRISE\"",
+        "LogGroupName": {
+          "Ref": "LmandaFuncLogGroup"
+        }
+      }
+    },
+    "CWLSubFilterApiGatewayLogGroupApNortheast1": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": "arn:aws:logs:ap-northeast-1:802587217904:destination:9cddf24e-1c91-461b-8456-e8cf7b336784#7xdKqZlzmmNpM2QY7S#NestJsServerless#stg",
+        "FilterPattern": "\"SLS_ACCESS_LOG\"",
+        "LogGroupName": {
+          "Ref": "ApiGatewayLogGroup"
+        }
+      }
     }
   },
   "Outputs": {
@@ -376,16 +794,18 @@
         "Ref": "ServerlessDeploymentBucket"
       },
       "Export": {
-        "Name": "sls-nestjs-serverless-test-dev-ServerlessDeploymentBucketName"
+        "Name": "sls-NestJsServerless-stg-ServerlessDeploymentBucketName"
       }
     },
-    "IndexLambdaFunctionQualifiedArn": {
-      "Description": "Current Lambda function version",
+    "EnterpriseLogAccessIamRole": {
       "Value": {
-        "Ref": "IndexLambdaVersionH7ZgwEyqCq0bByKneQaL225EcAT1108eBk7mTyOw"
+        "Fn::GetAtt": [
+          "EnterpriseLogAccessIamRole",
+          "Arn"
+        ]
       },
       "Export": {
-        "Name": "sls-nestjs-serverless-test-dev-IndexLambdaFunctionQualifiedArn"
+        "Name": "sls-NestJsServerless-stg-EnterpriseLogAccessIamRole"
       }
     },
     "ServiceEndpoint": {
@@ -406,18 +826,18 @@
             {
               "Ref": "AWS::URLSuffix"
             },
-            "/dev"
+            "/stg"
           ]
         ]
       },
       "Export": {
-        "Name": "sls-nestjs-serverless-test-dev-ServiceEndpoint"
+        "Name": "sls-NestJsServerless-stg-ServiceEndpoint"
       }
     },
-    "NestjsDashserverlessDashtestDashdevDashnodejsDashdefaultLambdaLayerQualifiedArn": {
-      "Value": "arn:aws:lambda:ap-northeast-1:184571202268:layer:nestjs-serverless-test-dev-nodejs-default:2",
+    "NestjsserverlessDashstgDashnodejsDashdefaultLambdaLayerQualifiedArn": {
+      "Value": "arn:aws:lambda:ap-northeast-1:184571202268:layer:nestjsserverless-stg-nodejs-default:2",
       "Export": {
-        "Name": "NestjsDashserverlessDashtestDashdevDashnodejsDashdefaultLambdaLayerQualifiedArn"
+        "Name": "NestjsserverlessDashstgDashnodejsDashdefaultLambdaLayerQualifiedArn"
       }
     }
   }

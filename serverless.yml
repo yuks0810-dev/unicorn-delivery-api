@@ -1,15 +1,20 @@
-service: nestjs-serverless-test
+org: nakatayuki
+app: nestjs-serverless-test
+service: NestJsServerless
 
 plugins:
   - serverless-layers
   - serverless-offline
-
+    
 provider:
   name: aws
   runtime: nodejs12.x
   region: ap-northeast-1
   stage: ${opt:stage, self:custom.defaultStage}
-  profile: ${self:custom.profiles.${self:provider.stage}}
+  profile: yuki.nakata
+  timeout: 30
+  memorySize: 128
+  versionFunctions: false
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -20,10 +25,7 @@ provider:
         - ec2:DeleteNetworkInterface
       Resource: "*"
   environment:
-    SERVERLESS_STAGE: ${self:provider.stage}
-    ENV: ${self:custom.environments.ENV}
-    DB_PORT: 3306
-    DB_HOST: !GetAtt RDSProxy.Endpoint
+    TZ: Asia/Tokyo
 
 custom:
   defaultStage: dev
@@ -33,8 +35,8 @@ custom:
     dev: yuki.nakata
     stg: yuki.nakata
     prd: yuki.nakata
-  environments: ${file(./config/config.${opt:stage, self:custom.defaultStage}.yml)}
-  secret: ${file(./config/secret/.secret.${opt:stage, self:custom.defaultStage}.yml)}
+  # environments: ${file(./config/config.${opt:stage, self:custom.defaultStage}.yml)}
+  # secret: ${file(./config/secret/.secret.${opt:stage, self:custom.defaultStage}.yml)}
 
 package:
   individually: true
@@ -44,16 +46,14 @@ package:
     - '**'
 
 functions:
-  testFunc:
-    name: in-house-library-api
+  LmandaFunc:
+    name: in-house-library-api-${self:provider.stage}
     handler: dist/handler.handler
-    desctiption: "nest.js"
     vpc:
       securityGroupIds:
-        - !Ref LambdaSecurityGroup
+        - !Ref InHouseLibrarySecurityGroup
       subnetIds:
-        - !Ref PrivateSubnetA
-        - !Ref PrivateSubnetC
+        - !Ref InHouseLibraryPrivateSubnet
     events:
       - http:
           path: '/'
@@ -64,159 +64,123 @@ functions:
 
 resources:
   Resources:
-    ## VPC Resource
-    VPC:
+
+    InHouseLibraryVPC:
       Type: AWS::EC2::VPC
+      DeletionPolicy: Delete
       Properties:
-        CidrBlock: 10.0.0.0/24
+        CidrBlock: 10.1.0.0/16
         Tags:
-          - { Key: Name, Value: Sample VPC }
-    PrivateSubnetA:
+          - Key: Name
+            Value: InHouseLibraryVPC
+
+    InHouseLibraryInternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryInternetGateway
+
+    VPCGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        InternetGatewayId: !Ref InHouseLibraryInternetGateway
+    
+    InHouseLibraryElasticIp:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+        # Tags:
+        #   - Key: Name
+        #     Value: InHouseLibraryElasticIp
+    
+    InHouseLibraryNatGateway:
+      DependsOn: InHouseLibraryElasticIp
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId: !GetAtt InHouseLibraryElasticIp.AllocationId
+        SubnetId: !Ref InHouseLibraryPublicSubnet
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryNatGateway
+    
+    InHouseLibraryPrivateSubnet:
+      DependsOn: InHouseLibraryVPC
       Type: AWS::EC2::Subnet
       Properties:
-        VpcId: !Ref VPC
-        CidrBlock: 10.0.0.0/25
-        AvailabilityZone: ap-northeast-1a
+        VpcId: !Ref InHouseLibraryVPC
+        # AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.1.1.0/24
         Tags:
-          - { Key: Name, Value: Sample Private A }
-    PrivateSubnetC:
+          - Key: Name
+            Value: InHouseLibraryPrivateSubnet
+
+    InHouseLibraryPrivateRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryPrivateRouteTable
+
+    InHouseLibraryPrivateRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId: !Ref InHouseLibraryPrivateRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId: !Ref InHouseLibraryNatGateway
+
+    SubnetRouteTableAssociationPrivateSubnet:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId: !Ref InHouseLibraryPrivateSubnet
+        RouteTableId: !Ref InHouseLibraryPrivateRouteTable
+
+    InHouseLibraryPublicSubnet:
+      DependsOn: InHouseLibraryVPC
       Type: AWS::EC2::Subnet
       Properties:
-        VpcId: !Ref VPC
-        CidrBlock: 10.0.0.128/25
-        AvailabilityZone: ap-northeast-1c
+        VpcId: !Ref InHouseLibraryVPC
+        # AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.1.11.0/24
         Tags:
-          - { Key: Name, Value: Sample Private C }
-    LambdaSecurityGroup:
+          - Key: Name
+            Value: InHouseLibraryPublicSubnet
+
+    InHouseLibraryPublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref InHouseLibraryVPC
+        Tags:
+          - Key: Name
+            Value: InHouseLibraryPublicRouteTable
+
+    InHouseLibraryPublicRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId: !Ref InHouseLibraryPublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref InHouseLibraryInternetGateway
+
+    SubnetRouteTableAssociationPublicSubnet:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId: !Ref InHouseLibraryPublicSubnet
+        RouteTableId: !Ref InHouseLibraryPublicRouteTable
+
+    InHouseLibraryApiGatewayRestApi:
+      Type: AWS::ApiGateway::RestApi
+      DeletionPolicy: Delete
+      Properties:
+        EndpointConfiguration:
+          Types:
+            - REGIONAL
+        Name: ${self:service}-${self:provider.stage}
+
+    InHouseLibrarySecurityGroup:
+      DependsOn: InHouseLibraryVPC
       Type: AWS::EC2::SecurityGroup
       Properties:
-        GroupDescription: SecurityGroup for Lambda Functions
-        VpcId: !Ref VPC
-        Tags:
-          - Key: "Name"
-            Value: "LambdaSecurityGroup"
-    AuroraSecurityGroup:
-      Type: AWS::EC2::SecurityGroup
-      Properties:
-        GroupDescription: SecurityGroup for Aurora
-        VpcId: !Ref VPC
-        SecurityGroupIngress:
-          - IpProtocol: tcp
-            FromPort: 3306
-            ToPort: 3306
-            CidrIp: 10.0.0.0/24
-        Tags:
-          - Key: "Name"
-            Value: "AuroraSecurityGroup"
-      DependsOn: VPC
-  
-    ## RDS Resource
-      DBSubnetGroup:
-        Type: AWS::RDS::DBSubnetGroup
-        Properties:
-          DBSubnetGroupDescription: "SampleDB subnet group"
-          DBSubnetGroupName: sampledb-subnet-group
-          SubnetIds:
-            - !Ref PrivateSubnetA
-            - !Ref PrivateSubnetC
-      DBCluster:
-        Type: AWS::RDS::DBCluster
-        Properties:
-          DatabaseName: SampleDB
-          Engine: aurora-postgresql
-          # EngineMode: serverless
-          EngineVersion: "11.6"
-          MasterUsername: ${self:custom.secret.USER_NAME}
-          MasterUserPassword: ${self:custom.secret.PASSWORD}
-          DBClusterParameterGroupName: !Ref DBClusterParameterGroup
-          DBSubnetGroupName: !Ref DBSubnetGroup
-          VpcSecurityGroupIds:
-            - !Ref AuroraSecurityGroup
-        DependsOn: DBSubnetGroup
-      DBClusterParameterGroup:
-        Type: AWS::RDS::DBClusterParameterGroup
-        Properties:
-          Description: A parameter group for aurora
-          Family: aurora-postgresql11
-          Parameters:
-            client_encoding: UTF8
-      DBInstance1:
-        Type: AWS::RDS::DBInstance
-        Properties:
-          DBClusterIdentifier: !Ref DBCluster
-          DBSubnetGroupName: !Ref DBSubnetGroup
-          Engine: aurora-postgresql
-          EngineVersion: "11.6"
-          DBInstanceClass: db.t3.medium
-        DependsOn: DBCluster
-
-
-    AuroraSecret:
-      Type: AWS::SecretsManager::Secret
-      Properties:
-        Name: Sample/aurora
-        SecretString: '{"username":"${self:custom.secret.USER_NAME}", "password":"${self:custom.secret.PASSWORD}"}'
-    SecretTargetAttachment:
-      Type: AWS::SecretsManager::SecretTargetAttachment
-      Properties:
-        SecretId: !Ref AuroraSecret
-        TargetId: !Ref DBCluster
-        TargetType: "AWS::RDS::DBCluster"
-      DependsOn: DBCluster
-    ProxyRole:
-      Type: AWS::IAM::Role
-      Properties:
-        RoleName: sample-proxy-role
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - "rds.amazonaws.com"
-              Action:
-                - "sts:AssumeRole"
-        Path: /
-        Policies:
-          - PolicyName: RdsProxyPolicy
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - "secretsmanager:GetResourcePolicy"
-                    - "secretsmanager:GetSecretValue"
-                    - "secretsmanager:DescribeSecret"
-                    - "secretsmanager:ListSecretVersionIds"
-                  Resource:
-                    - !Ref AuroraSecret
-                - Effect: Allow
-                  Action:
-                    - "kms:Decrypt"
-                  Resource: "arn:aws:kms:${self:provider.region}:#{AWS::AccountId}:key/*"
-                  Condition:
-                    StringEquals:
-                      kms:ViaService: "secretsmanager.${self:provider.region}.amazonaws.com"
-      DependsOn: AuroraSecret
-    RDSProxy:
-      Type: AWS::RDS::DBProxy
-      Properties:
-        DBProxyName: SampleAuroraProxy
-        Auth:
-          - SecretArn: !Ref AuroraSecret
-        VpcSecurityGroupIds:
-          - !Ref AuroraSecurityGroup
-        VpcSubnetIds:
-          - !Ref PrivateSubnetA
-          - !Ref PrivateSubnetC
-        EngineFamily: POSTGRESQL
-        RoleArn: !GetAtt ProxyRole.Arn
-      DependsOn: AuroraSecret
-    DBProxyTargetGroup:
-      Type: AWS::RDS::DBProxyTargetGroup
-      Properties:
-        TargetGroupName: default
-        DBProxyName: !Ref RDSProxy
-        DBClusterIdentifiers:
-          - !Ref DBCluster
-      DependsOn: RDSProxy
+        GroupDescription: SecurityGroup for InHouseLibrary Functions
+        VpcId: !Ref InHouseLibraryVPC
