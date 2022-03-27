@@ -1,8 +1,8 @@
 version: 0.2
 
-# env:
-#   secrets-manager:
-#     TEST_KEY: "in-house-library-secret-keys:TEST_KEY"
+env:
+  secrets-manager:
+    TEST_KEY: "in-house-library-secret-keys:TEST_KEY"
 
 phases:
   install:
