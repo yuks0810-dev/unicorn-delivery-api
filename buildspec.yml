@@ -10,7 +10,6 @@ phases:
       nodejs: 14
     commands:
       # ソースコードのclone
-      # CodePipeline経由で実行する場合には、cloneがスキップされる
       - git clone https://github.com/yuks0810-dev/in-house-library-api.git
       - cd in-house-library-api
       - npm install
