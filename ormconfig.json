@@ -5,8 +5,8 @@
     "username": "root",
     "password": "root_pass",
     "database": "in-house-library-db",
-    "migrations": ["src/migrations/*{.ts,.js}"],
-    "entities": ["src/entities/*{.ts,.js}"],
+    "migrations": ["dist/migrations/*{.ts,.js}"],
+    "entities": ["dist/entities/*{.ts,.js}"],
     "synchronize": false,
     "logging": false,
     "cli": {
