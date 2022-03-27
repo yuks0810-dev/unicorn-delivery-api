@@ -25,6 +25,3 @@ phases:
     commands:
       - echo ${TEST_ENV}
       - echo Build completed on `date`
-artifacts:
-  files:
-    - target/messageUtil-1.0.jar
