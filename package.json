@@ -20,8 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config ormconfig.js",
-    "typeorm:entity:create": "npx ts-node ./node_modules/typeorm/cli entity:create -d src/entities -n",
-    "typeorm:migration:generate": "npx ts-node ./node_modules/typeorm/cli migration:generate -d src/migrations -n",
+    "typeorm:entity:create": "npx ts-node ./node_modules/typeorm/cli entity:create -d src/entities -n $npm_config_entity",
+    "typeorm:migration:generate": "npx ts-node ./node_modules/typeorm/cli migration:generate -d src/migrations -n updateDB",
     "typeorm:migration:run": "npx ts-node ./node_modules/typeorm/cli migration:run",
     "typeorm:schema:sync": "npx ts-node ./node_modules/typeorm/cli schema:sync",
     "typeorm:generate-migration": "typeorm migration:generate -n PostRefactoring"
