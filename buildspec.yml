@@ -9,7 +9,6 @@ phases:
     runtime-versions:
       nodejs: 12
     commands:
-      # ソースコードのclone実行
       - git clone $CODEBUILD_SOURCE_REPO_URL
       - cd in-house-library-api
       - npm install
