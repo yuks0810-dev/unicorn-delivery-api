@@ -17,14 +17,16 @@ phases:
     on-failure: ABORT
     commands:
       - echo Nothing to do in the pre_build phase...
-      - echo "branch name" $CODEBUILD_WEBHOOK_TRIGGER
+      - echo "-------------------"
+      - echo $CODEBUILD_WEBHOOK_TRIGGER
+      - echo "$CODEBUILD_WEBHOOK_TRIGGER"
       - echo $TEST_KEY
   build:
     on-failure: ABORT
     commands:
       - echo Build started on `date`
       - echo $TEST_KEY
-      - echo "branch name" $CODEBUILD_WEBHOOK_TRIGGER
+      - echo $CODEBUILD_WEBHOOK_TRIGGER
   post_build:
     on-failure: ABORT
     commands:
