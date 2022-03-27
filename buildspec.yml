@@ -16,6 +16,7 @@ phases:
   pre_build:
     on-failure: ABORT
     commands:
+      - echo "branch name" $BRANCH_NAME
       - echo Nothing to do in the pre_build phase...
       - echo $TEST_KEY
   build:
