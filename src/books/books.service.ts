@@ -1,4 +1,4 @@
-import { Body, Injectable, Post } from '@nestjs/common';
+import { Body, Get, Injectable, Post } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { books } from 'src/entities/books';
@@ -21,8 +21,8 @@ export class BooksService {
     return await this.bookRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} book`;
+  async findOne(id: number) {
+    return await this.bookRepository.findOne(id);
   }
 
   update(id: number, updateBookDto: UpdateBookDto) {
