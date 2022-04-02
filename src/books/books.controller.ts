@@ -8,7 +8,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
-import { CreateBookDto } from './dto/create-book.dto';
+import { CreateBookDto } from './dto/create-book.dto'; // eslint-disable-line
 import { UpdateBookDto } from './dto/update-book.dto';
 
 @Controller('books')
@@ -17,7 +17,6 @@ export class BooksController {
 
   @Post()
   create(@Body() CreateBookDto: CreateBookDto) {
-    console.log(CreateBookDto);
     return this.booksService.create(CreateBookDto);
   }
 
