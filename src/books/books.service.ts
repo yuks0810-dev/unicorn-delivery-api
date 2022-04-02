@@ -27,7 +27,8 @@ export class BooksService {
   }
 
   update(id: number, updateBookDto: UpdateBookDto) {
-    return `This action updates a #id:${id} → ${updateBookDto} book`;
+    const updateResult = this.bookRepository.update(id, updateBookDto);
+    return updateResult;
   }
 
   remove(id: number) {
