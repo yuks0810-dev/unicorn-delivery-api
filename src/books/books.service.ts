@@ -1,7 +1,7 @@
 import { Body, Injectable, Post } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Book } from 'src/entities/books';
+import { Book } from '../entities/books';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { CreateBookDto } from './dto/create-book.dto';
 
@@ -15,7 +15,7 @@ export class BooksService {
   @Post()
   async create(@Body() CreateBookDto: CreateBookDto) {
     const result = this.bookRepository.save(CreateBookDto);
-    return result
+    return result;
   }
 
   async findAll() {
