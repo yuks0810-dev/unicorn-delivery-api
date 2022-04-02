@@ -1,12 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
-export class books {
+@Entity('books')
+export class Book {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  titie: string;
+  title: string;
 
   @Column('datetime', { default: null })
   created_at: Date;

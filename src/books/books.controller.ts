@@ -7,8 +7,9 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { books } from 'src/entities/books';
+import { Book } from 'src/entities/books';
 import { BooksService } from './books.service';
+import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 
 @Controller('books')
@@ -16,9 +17,9 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
-  create(@Body() books: Array<books>) {
-    console.log(books);
-    return this.booksService.create(books);
+  create(@Body() CreateBookDto: CreateBookDto) {
+    console.log(CreateBookDto);
+    return this.booksService.create(CreateBookDto);
   }
 
   @Get()
