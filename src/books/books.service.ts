@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Book } from '../entities/books';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { CreateBookDto } from './dto/create-book.dto';
+import { CreateBookDto } from './dto/create-book.dto'; // eslint-disable-line
 
 @Injectable()
 export class BooksService {
@@ -30,7 +30,8 @@ export class BooksService {
     return `This action updates a #id:${id} → ${updateBookDto} book`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} book`;
+  async remove(id: number) {
+    const deleteResult = await this.bookRepository.delete({ id: id });
+    return deleteResult;
   }
 }
