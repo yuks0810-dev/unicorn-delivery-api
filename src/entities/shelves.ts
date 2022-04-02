@@ -3,7 +3,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
 export class shelves {
   @PrimaryGeneratedColumn()
-  id: Number;
+  id: number;
 
   @Column()
   category: string;

@@ -2,7 +2,6 @@ import { Body, Injectable, Post } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { books } from 'src/entities/books';
-import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
@@ -14,7 +13,7 @@ export class BooksService {
 
   @Post()
   async create(@Body() Books: Array<books>) {
-    console.log(Body);
+    console.log(Books);
     return this.bookRepository.create();
   }
 
@@ -27,7 +26,7 @@ export class BooksService {
   }
 
   update(id: number, updateBookDto: UpdateBookDto) {
-    return `This action updates a #${id} book`;
+    return `This action updates a #id:${id} → ${updateBookDto} book`;
   }
 
   remove(id: number) {
