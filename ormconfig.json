@@ -4,7 +4,7 @@
     "port": 3306,
     "username": "root",
     "password": "root_pass",
-    "database": "in-house-library-db",
+    "database": "unicorn-delivery-db",
     "migrations": ["dist/migrations/*{.ts,.js}"],
     "entities": ["dist/entities/*{.ts,.js}"],
     "synchronize": false,
