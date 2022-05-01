@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import {InsertResult} from 'typeorm'
 import { Repository } from 'typeorm';
 import { Unicorn } from 'src/entities/unicorns';
 import { CreateUnicornDto } from './dto/create-unicorn.dto';
@@ -12,8 +13,8 @@ export class UnicornsService {
     private readonly unicornRepository: Repository<Unicorn>,
   ) {}
 
-  create(createUnicornDto: CreateUnicornDto) {
-    return 'This action adds a new unicorn';
+  async create(Unicorn: CreateUnicornDto): Promise<InsertResult> {
+    return await this.unicornRepository.insert(Unicorn);
   }
 
   async findAll() {

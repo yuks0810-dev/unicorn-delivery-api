@@ -1,1 +1,4 @@
-export class CreateUnicornDto {}
+export class CreateUnicornDto {
+    name: string;
+    type: number;
+}
