@@ -7,6 +7,6 @@ import { Unicorn } from 'src/entities/unicorns';
 @Module({
   imports: [TypeOrmModule.forFeature([Unicorn])],
   controllers: [UnicornsController],
-  providers: [UnicornsService]
+  providers: [UnicornsService],
 })
 export class UnicornsModule {}

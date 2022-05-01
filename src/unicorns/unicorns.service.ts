@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {InsertResult} from 'typeorm'
+import { InsertResult } from 'typeorm';
 import { Repository } from 'typeorm';
 import { Unicorn } from 'src/entities/unicorns';
 import { CreateUnicornDto } from './dto/create-unicorn.dto';

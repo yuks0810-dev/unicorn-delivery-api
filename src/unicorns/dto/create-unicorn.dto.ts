@@ -1,4 +1,4 @@
 export class CreateUnicornDto {
-    name: string;
-    type: number;
+  name: string;
+  type: number;
 }
