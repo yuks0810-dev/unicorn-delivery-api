@@ -1,5 +1,4 @@
-org: nakatayuki
-app: nestjs-serverless-test
+
 service: NestJsServerless
 
 plugins:
@@ -8,14 +7,15 @@ plugins:
     
 provider:
   name: aws
-  runtime: nodejs12.x
-  region: ap-northeast-1
+  runtime: nodejs14.x
   stage: ${opt:stage, self:custom.defaultStage}
-  profile: yuki.nakata
   timeout: 30
   memorySize: 128
   versionFunctions: false
-  iamRoleStatements:
+  region: us-west-2
+  deploymentBucket:
+    name: nestjs-lambda-layers-nakatayuki
+  iam.role.statements:
     - Effect: Allow
       Action:
         - secretsmanager:GetSecretValue
@@ -29,14 +29,11 @@ provider:
 
 custom:
   defaultStage: dev
-  serverless-layers:
-    layersDeploymentBucket: in-house-library-api-serverless-bucket
-  profiles:
-    dev: yuki.nakata
-    stg: yuki.nakata
-    prd: yuki.nakata
+  # serverless-layers:
+    # layersDeploymentBucket: nestjs-lambda-layers-nakatayuki
   # environments: ${file(./config/config.${opt:stage, self:custom.defaultStage}.yml)}
   # secret: ${file(./config/secret/.secret.${opt:stage, self:custom.defaultStage}.yml)}
+  secret: ${file(./config/secret/.secret.${opt:stage, self:custom.defaultStage}.yml)}
 
 package:
   individually: true
@@ -51,9 +48,9 @@ functions:
     handler: dist/handler.handler
     vpc:
       securityGroupIds:
-        - !Ref InHouseLibrarySecurityGroup
+        - !Ref LambdaSecurityGroup
       subnetIds:
-        - !Ref InHouseLibraryPrivateSubnet
+        - !Ref PrivateSubnet
     events:
       - http:
           path: '/'
@@ -64,112 +61,109 @@ functions:
 
 resources:
   Resources:
-
-    InHouseLibraryVPC:
+    VPC:
       Type: AWS::EC2::VPC
       DeletionPolicy: Delete
       Properties:
         CidrBlock: 10.1.0.0/16
         Tags:
           - Key: Name
-            Value: InHouseLibraryVPC
-
-    InHouseLibraryInternetGateway:
+            Value: VPC
+          - Key: App
+            Value: UnicornDelivery
+    InternetGateway:
       Type: AWS::EC2::InternetGateway
       Properties:
         Tags:
           - Key: Name
-            Value: InHouseLibraryInternetGateway
-
+            Value: InternetGateway
+          - Key: App
+            Value: UnicornDelivery
     VPCGatewayAttachment:
       Type: AWS::EC2::VPCGatewayAttachment
       Properties:
-        VpcId: !Ref InHouseLibraryVPC
-        InternetGatewayId: !Ref InHouseLibraryInternetGateway
-    
-    InHouseLibraryElasticIp:
+        VpcId: !Ref VPC
+        InternetGatewayId: !Ref InternetGateway
+    ElasticIp:
       Type: AWS::EC2::EIP
       Properties:
         Domain: vpc
-        # Tags:
-        #   - Key: Name
-        #     Value: InHouseLibraryElasticIp
-    
-    InHouseLibraryNatGateway:
-      DependsOn: InHouseLibraryElasticIp
+        Tags:
+          - Key: Name
+            Value: ElasticIpElasticIp
+          - Key: App
+            Value: UnicornDelivery
+    DeliveryNatGateway:
+      DependsOn: ElasticIp
       Type: AWS::EC2::NatGateway
       Properties:
-        AllocationId: !GetAtt InHouseLibraryElasticIp.AllocationId
-        SubnetId: !Ref InHouseLibraryPublicSubnet
+        AllocationId: !GetAtt ElasticIp.AllocationId
+        SubnetId: !Ref PublicSubnet
         Tags:
           - Key: Name
-            Value: InHouseLibraryNatGateway
-    
-    InHouseLibraryPrivateSubnet:
-      DependsOn: InHouseLibraryVPC
+            Value: DeliveryNatGateway
+          - Key: App
+            Value: UnicornDelivery
+    PrivateSubnet:
+      DependsOn: VPC
       Type: AWS::EC2::Subnet
       Properties:
-        VpcId: !Ref InHouseLibraryVPC
+        VpcId: !Ref VPC
         # AvailabilityZone: ${self:provider.region}a
         CidrBlock: 10.1.1.0/24
-        Tags:
-          - Key: Name
-            Value: InHouseLibraryPrivateSubnet
-
-    InHouseLibraryPrivateRouteTable:
+    PrivateRouteTable:
       Type: AWS::EC2::RouteTable
       Properties:
-        VpcId: !Ref InHouseLibraryVPC
+        VpcId: !Ref VPC
         Tags:
           - Key: Name
-            Value: InHouseLibraryPrivateRouteTable
-
-    InHouseLibraryPrivateRoute:
+            Value: PrivateRouteTable
+          - Key: App
+            Value: UnicornDelivery
+    PrivateRoute:
       Type: AWS::EC2::Route
       Properties:
-        RouteTableId: !Ref InHouseLibraryPrivateRouteTable
+        RouteTableId: !Ref PrivateRouteTable
         DestinationCidrBlock: 0.0.0.0/0
-        NatGatewayId: !Ref InHouseLibraryNatGateway
-
+        NatGatewayId: !Ref DeliveryNatGateway
     SubnetRouteTableAssociationPrivateSubnet:
       Type: AWS::EC2::SubnetRouteTableAssociation
       Properties:
-        SubnetId: !Ref InHouseLibraryPrivateSubnet
-        RouteTableId: !Ref InHouseLibraryPrivateRouteTable
-
-    InHouseLibraryPublicSubnet:
-      DependsOn: InHouseLibraryVPC
+        SubnetId: !Ref PrivateSubnet
+        RouteTableId: !Ref PrivateRouteTable
+    PublicSubnet:
+      DependsOn: VPC
       Type: AWS::EC2::Subnet
       Properties:
-        VpcId: !Ref InHouseLibraryVPC
+        VpcId: !Ref VPC
         # AvailabilityZone: ${self:provider.region}a
         CidrBlock: 10.1.11.0/24
         Tags:
           - Key: Name
-            Value: InHouseLibraryPublicSubnet
-
-    InHouseLibraryPublicRouteTable:
+            Value: yuki-nakata
+          - Key: App
+            Value: UnicornDelivery
+    PublicRouteTable:
       Type: AWS::EC2::RouteTable
       Properties:
-        VpcId: !Ref InHouseLibraryVPC
+        VpcId: !Ref VPC
         Tags:
           - Key: Name
-            Value: InHouseLibraryPublicRouteTable
-
-    InHouseLibraryPublicRoute:
+            Value: yuki-nakata
+          - Key: App
+            Value: UnicornDelivery
+    PublicRoute:
       Type: AWS::EC2::Route
       Properties:
-        RouteTableId: !Ref InHouseLibraryPublicRouteTable
+        RouteTableId: !Ref PublicRouteTable
         DestinationCidrBlock: 0.0.0.0/0
-        GatewayId: !Ref InHouseLibraryInternetGateway
-
+        GatewayId: !Ref InternetGateway
     SubnetRouteTableAssociationPublicSubnet:
       Type: AWS::EC2::SubnetRouteTableAssociation
       Properties:
-        SubnetId: !Ref InHouseLibraryPublicSubnet
-        RouteTableId: !Ref InHouseLibraryPublicRouteTable
-
-    InHouseLibraryApiGatewayRestApi:
+        SubnetId: !Ref PublicSubnet
+        RouteTableId: !Ref PublicRouteTable
+    ApiGatewayRestApi:
       Type: AWS::ApiGateway::RestApi
       DeletionPolicy: Delete
       Properties:
@@ -177,10 +171,31 @@ resources:
           Types:
             - REGIONAL
         Name: ${self:service}-${self:provider.stage}
-
-    InHouseLibrarySecurityGroup:
-      DependsOn: InHouseLibraryVPC
+        Tags:
+          - Key: App
+            Value: UnicornDelivery
+    LambdaSecurityGroup:
+      DependsOn: VPC
       Type: AWS::EC2::SecurityGroup
       Properties:
-        GroupDescription: SecurityGroup for InHouseLibrary Functions
-        VpcId: !Ref InHouseLibraryVPC
+        GroupDescription: SecurityGroup for UnicornDelivery Functions
+        VpcId: !Ref VPC
+        Tags:
+          - Key: App
+            Value: UnicornDelivery
+    AuroraSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: SecurityGroup for Aurora
+        VpcId: !Ref VPC
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 3306
+            ToPort: 3306
+            CidrIp: 10.0.0.0/24
+        Tags:
+          - Key: "Name"
+            Value: "AuroraSecurityGroup"
+          - Key: App
+            Value: UnicornDelivery
+      DependsOn: VPC
