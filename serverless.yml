@@ -44,7 +44,7 @@ package:
 
 functions:
   LmandaFunc:
-    name: in-house-library-api-${self:provider.stage}
+    name: unicorn-delivery-api-${self:provider.stage}
     handler: dist/handler.handler
     vpc:
       securityGroupIds:
@@ -61,16 +61,16 @@ functions:
 
 resources:
   Resources:
-    VPC:
-      Type: AWS::EC2::VPC
-      DeletionPolicy: Delete
-      Properties:
-        CidrBlock: 10.1.0.0/16
-        Tags:
-          - Key: Name
-            Value: VPC
-          - Key: App
-            Value: UnicornDelivery
+    # VPC:
+    #   Type: AWS::EC2::VPC
+    #   DeletionPolicy: Delete
+    #   Properties:
+    #     CidrBlock: 10.1.0.0/16
+    #     Tags:
+    #       - Key: Name
+    #         Value: VPC
+    #       - Key: App
+    #         Value: UnicornDelivery
     InternetGateway:
       Type: AWS::EC2::InternetGateway
       Properties:
