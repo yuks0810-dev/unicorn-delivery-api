@@ -1,0 +1,29 @@
+
+
+Error:
+Error: Please, you should specify "deploymentBucket" or "layersDeploymentBucket" option for this plugin!
+
+    at ServerlessLayers.getBucketName (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/index.js:549:15)
+    at ZipService.AbstractService (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/AbstractService.js:26:30)
+    at new ZipService (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/package/ZipService.js:42:107)
+    at ServerlessLayers._callee4$ (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/index.js:275:35)
+    at tryCatch (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/regenerator-runtime/runtime.js:63:40)
+    at Generator.invoke [as _invoke] (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/regenerator-runtime/runtime.js:294:22)
+    at Generator.next (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/regenerator-runtime/runtime.js:119:21)
+    at asyncGeneratorStep (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:24)
+    at _next (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:25:9)
+    at /home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:32:7
+    at new Promise (<anonymous>)
+    at ServerlessLayers.<anonymous> (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:21:12)
+    at ServerlessLayers.initServices (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/index.js:292:30)
+    at ServerlessLayers._callee2$ (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/index.js:181:29)
+    at tryCatch (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/regenerator-runtime/runtime.js:63:40)
+    at Generator.invoke [as _invoke] (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/regenerator-runtime/runtime.js:294:22)
+    at Generator.next (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/regenerator-runtime/runtime.js:119:21)
+    at asyncGeneratorStep (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:24)
+    at _next (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:25:9)
+    at /home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:32:7
+    at new Promise (<anonymous>)
+    at ServerlessLayers.<anonymous> (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/@babel/runtime/helpers/asyncToGenerator.js:21:12)
+    at ServerlessLayers.deployLayers (/home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/index.js:203:30)
+    at /home/yuki-nakata/projects/personal/unicorn-delivery-api-2/node_modules/serverless-layers/lib/index.js:66:26
